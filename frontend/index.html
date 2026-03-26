@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Movie Review Sentiment</title>
+    <link rel="stylesheet" href="/frontend/styles.css" />
+</head>
+
+<body>
+    <main class="container">
+        <h1 class="welcome">Movie Review Sentiment Analyzer</h1>
+
+        <section class="input-section">
+            <label for="reviewInput" class="input-label">Enter movie review</label>
+            <textarea id="reviewInput" class="review-input" placeholder="Enter movie review" rows="7"></textarea>
+            <button id="analyzeButton" class="analyze-button">Analyze Review</button>
+            <p id="statusMessage" class="status-message"></p>
+        </section>
+
+        <section id="resultSection" class="result-section hidden">
+            <div class="score-grid">
+                <div class="score-card positive-card">
+                    <p class="score-label">Positive</p>
+                    <p id="positiveScore" class="score-value">0.0%</p>
+                </div>
+                <div class="score-card negative-card">
+                    <p class="score-label">Negative</p>
+                    <p id="negativeScore" class="score-value">0.0%</p>
+                </div>
+            </div>
+
+            <div class="tokens-block">
+                <h2 class="tokens-title">Token Sentiment</h2>
+                <div id="tokenOutput" class="token-output"></div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/frontend/app.js"></script>
+</body>
+
+</html>

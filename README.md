@@ -10,8 +10,23 @@ pip install transformers torch flask
 
 
 ```bash
+source .venv/bin/activate.fish
 python server.py
 ```
+
+Then open the UI in your browser:
+
+```bash
+http://127.0.0.1:5000/
+```
+
+## Frontend UI
+
+- Large welcome heading at the top of the page.
+- Text box labeled **Enter movie review**.
+- Calls `POST /api/analyze` when you click **Analyze Review**.
+- Displays large positive and negative percentages.
+- Renders review tokens with colors from red to green based on each token score (`positive_probability - negative_probability`).
 
 ## API
 

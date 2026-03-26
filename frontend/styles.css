@@ -1,0 +1,134 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f7fb;
+    color: #1f2937;
+}
+
+.container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 20px 40px;
+}
+
+.welcome {
+    font-size: 44px;
+    margin: 0 0 24px;
+    text-align: center;
+}
+
+.input-section {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+}
+
+.input-label {
+    display: block;
+    font-size: 20px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.review-input {
+    width: 100%;
+    resize: vertical;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.analyze-button {
+    margin-top: 14px;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+}
+
+.analyze-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.status-message {
+    margin: 10px 0 0;
+    min-height: 20px;
+    font-size: 14px;
+}
+
+.result-section {
+    margin-top: 24px;
+}
+
+.hidden {
+    display: none;
+}
+
+.score-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.score-card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    padding: 18px;
+    text-align: center;
+}
+
+.score-label {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.score-value {
+    margin: 10px 0 0;
+    font-size: 52px;
+    font-weight: 700;
+}
+
+.positive-card .score-label {
+    color: #166534;
+}
+
+.negative-card .score-label {
+    color: #991b1b;
+}
+
+.tokens-block {
+    margin-top: 20px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    padding: 18px;
+}
+
+.tokens-title {
+    margin: 0 0 12px;
+    font-size: 22px;
+}
+
+.token-output {
+    line-height: 1.9;
+    font-size: 19px;
+    white-space: pre-wrap;
+}
+
+.token-word {
+    font-weight: 600;
+}
