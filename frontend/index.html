@@ -9,8 +9,10 @@
 </head>
 
 <body>
+    <div class="background-glow" aria-hidden="true"></div>
     <main class="container">
         <h1 class="welcome">Movie Review Sentiment Analyzer</h1>
+        <p class="subtitle">Analyze reviews with token-level sentiment visualization.</p>
 
         <section class="input-section">
             <label for="reviewInput" class="input-label">Enter movie review</label>
@@ -33,10 +35,17 @@
 
             <div class="tokens-block">
                 <h2 class="tokens-title">Token Sentiment</h2>
+                <p class="tokens-note">Hover a word to view positive and negative scores.</p>
                 <div id="tokenOutput" class="token-output"></div>
             </div>
         </section>
     </main>
+
+    <div id="tokenTooltip" class="token-tooltip hidden" role="tooltip" aria-hidden="true">
+        <p id="tooltipToken" class="tooltip-token"></p>
+        <p id="tooltipPositive" class="tooltip-score"></p>
+        <p id="tooltipNegative" class="tooltip-score"></p>
+    </div>
 
     <script src="/frontend/app.js"></script>
 </body>

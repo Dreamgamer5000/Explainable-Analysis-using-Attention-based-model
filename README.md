@@ -1,64 +1,37 @@
-# Explainable-Analysis-using-Attention-based-model
+# Movie Review Sentiment Analyzer
 
-## Installation
+This project is a Flask web app that analyzes movie reviews and shows overall sentiment plus token-level sentiment scores.
 
-Open your terminal or command prompt and run the following command to install the required libraries:
+The model used is `distilbert-base-uncased-finetuned-sst-2-english` from Hugging Face Transformers.
+
+## Setup and Run
+
+1. Create a virtual environment:
 
 ```bash
-pip install transformers torch flask
+python3 -m venv .venv
 ```
 
+2. Activate the virtual environment (fish shell):
 
 ```bash
 source .venv/bin/activate.fish
+```
+
+3. Install dependencies:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+4. Start the server:
+
+```bash
 python server.py
 ```
 
-Then open the UI in your browser:
+5. Open the app in your browser:
 
 ```bash
 http://127.0.0.1:5000/
-```
-
-## Frontend UI
-
-- Large welcome heading at the top of the page.
-- Text box labeled **Enter movie review**.
-- Calls `POST /api/analyze` when you click **Analyze Review**.
-- Displays large positive and negative percentages.
-- Renders review tokens with colors from red to green based on each token score (`positive_probability - negative_probability`).
-
-## API
-
-### Health check
-
-```bash
-curl http://127.0.0.1:5000/health
-```
-
-### Analyze movie review
-
-```bash
-curl -X POST http://127.0.0.1:5000/api/analyze \
-	-H "Content-Type: application/json" \
-	-d '{"review":"The movie was amazing but a bit too long."}'
-```
-
-### Response shape
-
-```json
-{
-	"review": "The movie was amazing but a bit too long.",
-	"overall": {
-		"positive_probability": 0.999,
-		"negative_probability": 0.001
-	},
-	"tokens": [
-		{
-			"token": "movie",
-			"positive_probability": 0.95,
-			"negative_probability": 0.05
-		}
-	]
-}
 ```
