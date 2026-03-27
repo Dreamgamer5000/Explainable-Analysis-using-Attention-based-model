@@ -316,6 +316,75 @@ body {
     }
 }
 
+/* ── Chart blocks (trajectory + radar inside result section) ──────────────── */
+.chart-block {
+    margin-top: 20px;
+    background: linear-gradient(180deg, #161d2f, #101523);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    padding: 18px;
+    box-shadow: var(--shadow-soft);
+}
+
+.chart-title {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.chart-note {
+    margin: 8px 0 14px;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+}
+
+.chart-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.radar-wrap {
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+/* ── Scatter section ──────────────────────────────────────────────────────── */
+.scatter-section {
+    margin-top: 40px;
+}
+
+.section-title {
+    font-size: clamp(1.4rem, 4vw, 1.8rem);
+    font-weight: 700;
+    margin: 0 0 8px;
+    letter-spacing: 0.01em;
+}
+
+.section-subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin: 0 0 16px;
+    line-height: 1.55;
+}
+
+.section-subtitle code {
+    background: #1e2840;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 0.88em;
+    color: var(--accent);
+}
+
+.scatter-wrap {
+    margin-top: 20px;
+    height: 480px;
+    background: linear-gradient(180deg, #161d2f, #101523);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    padding: 18px;
+    box-shadow: var(--shadow-soft);
+}
+
 @media (max-width: 640px) {
     .score-value {
         font-size: 40px;
@@ -323,6 +392,14 @@ body {
 
     .token-output {
         font-size: 17px;
+    }
+
+    .scatter-wrap {
+        height: 340px;
+    }
+
+    .radar-wrap {
+        max-width: 100%;
     }
 }
 

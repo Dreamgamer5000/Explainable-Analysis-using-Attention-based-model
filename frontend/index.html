@@ -6,13 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Movie Review Sentiment</title>
     <link rel="stylesheet" href="/frontend/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
 
 <body>
     <div class="background-glow" aria-hidden="true"></div>
     <main class="container">
         <h1 class="welcome">Movie Review Sentiment Analyzer</h1>
-        <p class="subtitle">Analyze reviews with token-level sentiment visualization.</p>
+        <p class="subtitle">Analyze reviews with token-level sentiment, narrative arc, and aspect scoring.</p>
 
         <section class="input-section">
             <label for="reviewInput" class="input-label">Enter movie review</label>
@@ -37,6 +38,40 @@
                 <h2 class="tokens-title">Token Sentiment</h2>
                 <p class="tokens-note">Hover a word to view positive and negative scores.</p>
                 <div id="tokenOutput" class="token-output"></div>
+            </div>
+
+            <div id="trajectoryBlock" class="chart-block hidden">
+                <h2 class="chart-title">Sentiment Trajectory</h2>
+                <p class="chart-note">Sentiment score per sentence — from &minus;1 (negative) to +1 (positive). Hover a point to read the sentence.</p>
+                <div class="chart-wrap">
+                    <canvas id="trajectoryChart"></canvas>
+                </div>
+            </div>
+
+            <div id="aspectsBlock" class="chart-block hidden">
+                <h2 class="chart-title">Aspect Sentiment</h2>
+                <p class="chart-note">Sentiment for each cinematic aspect mentioned in the review. Gray points indicate no mentions detected.</p>
+                <div class="chart-wrap radar-wrap">
+                    <canvas id="aspectsChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="scatter-section">
+            <h2 class="section-title">Polarized Word Scatter</h2>
+            <p class="section-subtitle">Paste multiple reviews separated by <code>---</code> to see which words drive positive vs. negative sentiment across the batch.</p>
+            <div class="input-section">
+                <label for="scatterInput" class="input-label">Batch reviews</label>
+                <textarea id="scatterInput" class="review-input" rows="8" placeholder="An absolute triumph! The acting was brilliant and the cinematography stunning.
+---
+A complete waste of time. Terrible dialogue and a nonsensical plot.
+---
+The visuals were incredible but the story dragged on forever."></textarea>
+                <button id="scatterButton" class="analyze-button">Analyze Batch</button>
+                <p id="scatterStatus" class="status-message"></p>
+            </div>
+            <div id="scatterChartWrap" class="chart-wrap scatter-wrap hidden">
+                <canvas id="scatterChart"></canvas>
             </div>
         </section>
     </main>
