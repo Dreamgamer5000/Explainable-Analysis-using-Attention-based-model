@@ -18,6 +18,23 @@
         <section class="input-section">
             <label for="reviewInput" class="input-label">Enter movie review</label>
             <textarea id="reviewInput" class="review-input" placeholder="Enter movie review" rows="7"></textarea>
+            <div class="explain-controls">
+                <div class="control-item">
+                    <label for="explainMethod" class="control-label">Explain method</label>
+                    <select id="explainMethod" class="control-select">
+                        <option value="auto" selected>Auto (LIME then SHAP fallback)</option>
+                        <option value="lime">LIME</option>
+                        <option value="shap">SHAP</option>
+                    </select>
+                </div>
+                <div class="control-item">
+                    <label for="tokenViewMode" class="control-label">Token color mode</label>
+                    <select id="tokenViewMode" class="control-select">
+                        <option value="probability" selected>Probability</option>
+                        <option value="attribution">Attribution</option>
+                    </select>
+                </div>
+            </div>
             <button id="analyzeButton" class="analyze-button">Analyze Review</button>
             <p id="statusMessage" class="status-message"></p>
         </section>
@@ -37,12 +54,30 @@
             <div class="tokens-block">
                 <h2 class="tokens-title">Token Sentiment</h2>
                 <p class="tokens-note">Hover a word to view positive and negative scores.</p>
+                <p id="tokenModeNote" class="tokens-note tokens-note-accent">Attribution mode colors words by
+                    contribution to the predicted class.</p>
                 <div id="tokenOutput" class="token-output"></div>
+            </div>
+
+            <div id="explanationSummary" class="summary-block hidden">
+                <h2 class="chart-title">Word Influence Summary</h2>
+                <p id="summaryMethodLabel" class="chart-note">Method: --</p>
+                <div class="summary-grid">
+                    <div class="summary-column summary-positive">
+                        <h3 class="summary-title">Pushes Positive</h3>
+                        <ul id="topPositiveWords" class="summary-list"></ul>
+                    </div>
+                    <div class="summary-column summary-negative">
+                        <h3 class="summary-title">Pushes Negative</h3>
+                        <ul id="topNegativeWords" class="summary-list"></ul>
+                    </div>
+                </div>
             </div>
 
             <div id="trajectoryBlock" class="chart-block hidden">
                 <h2 class="chart-title">Sentiment Trajectory</h2>
-                <p class="chart-note">Sentiment score per sentence — from &minus;1 (negative) to +1 (positive). Hover a point to read the sentence.</p>
+                <p class="chart-note">Sentiment score per sentence — from &minus;1 (negative) to +1 (positive). Hover a
+                    point to read the sentence.</p>
                 <div class="chart-wrap">
                     <canvas id="trajectoryChart"></canvas>
                 </div>
@@ -50,36 +85,21 @@
 
             <div id="aspectsBlock" class="chart-block hidden">
                 <h2 class="chart-title">Aspect Sentiment</h2>
-                <p class="chart-note">Sentiment for each cinematic aspect mentioned in the review. Gray points indicate no mentions detected.</p>
+                <p class="chart-note">Sentiment for each cinematic aspect mentioned in the review. Gray points indicate
+                    no mentions detected.</p>
                 <div class="chart-wrap radar-wrap">
                     <canvas id="aspectsChart"></canvas>
                 </div>
             </div>
         </section>
 
-        <section class="scatter-section">
-            <h2 class="section-title">Polarized Word Scatter</h2>
-            <p class="section-subtitle">Paste multiple reviews separated by <code>---</code> to see which words drive positive vs. negative sentiment across the batch.</p>
-            <div class="input-section">
-                <label for="scatterInput" class="input-label">Batch reviews</label>
-                <textarea id="scatterInput" class="review-input" rows="8" placeholder="An absolute triumph! The acting was brilliant and the cinematography stunning.
----
-A complete waste of time. Terrible dialogue and a nonsensical plot.
----
-The visuals were incredible but the story dragged on forever."></textarea>
-                <button id="scatterButton" class="analyze-button">Analyze Batch</button>
-                <p id="scatterStatus" class="status-message"></p>
-            </div>
-            <div id="scatterChartWrap" class="chart-wrap scatter-wrap hidden">
-                <canvas id="scatterChart"></canvas>
-            </div>
-        </section>
-    </main>
+   </main>
 
     <div id="tokenTooltip" class="token-tooltip hidden" role="tooltip" aria-hidden="true">
         <p id="tooltipToken" class="tooltip-token"></p>
         <p id="tooltipPositive" class="tooltip-score"></p>
         <p id="tooltipNegative" class="tooltip-score"></p>
+        <p id="tooltipAttribution" class="tooltip-score hidden"></p>
     </div>
 
     <script src="/frontend/app.js"></script>
