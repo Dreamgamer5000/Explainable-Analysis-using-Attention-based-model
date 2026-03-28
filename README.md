@@ -11,6 +11,16 @@ This project is a Flask web app that analyzes movie reviews and provides:
 The base model is Hugging Face DistilBERT sentiment:
 `distilbert-base-uncased-finetuned-sst-2-english`.
 
+## Design Decisions: Hardcoded Words
+
+The project uses two sets of hardcoded word lists for efficiency and interpretability:
+
+1. **Stopwords** — Common English words (via scikit-learn) plus domain-specific terms like "film", "movie", "watch". These are filtered during word frequency analysis in `/api/scatter` so that only meaningful, sentiment-bearing words are counted.
+
+2. **Aspect Keywords** — Domain-specific keywords map sentences to cinematic aspects (Acting, Directing, Plot, Cinematography, Soundtrack). This keyword-based approach is lightweight, requires no pre-training, and produces deterministic aspect detection without downloading a 1.6GB model.
+
+Both lists are intentionally kept simple and malleable in the code so you can edit them based on your use case.
+
 ## Explainability Modes
 
 The single-review endpoint now supports `explain_method`:
@@ -53,12 +63,5 @@ python server.py
 http://127.0.0.1:5000/
 ```
 
-## API Example
-
-```bash
-curl -X POST http://127.0.0.1:5000/api/analyze \
-	-H "Content-Type: application/json" \
-	-d '{"review":"The acting was great but the plot was weak.","explain_method":"lime"}'
-```
 
 If explainability fails (for missing dependency or runtime issue), the API still returns standard sentiment output and marks explanation as unavailable.

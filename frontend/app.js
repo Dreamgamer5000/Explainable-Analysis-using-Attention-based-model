@@ -185,7 +185,8 @@ function renderExplanationSummary(explanation) {
     }
 
     explanationSummary.classList.remove("hidden");
-    summaryMethodLabel.textContent = `Method: ${explanation.method.toUpperCase()} | Predicted class: ${explanation.class_label} (${asPercent(explanation.class_probability)})`;
+    const target = explanation.attribution_target || "POSITIVE";
+    summaryMethodLabel.textContent = `Method: ${explanation.method.toUpperCase()} | Predicted class: ${explanation.class_label} (${asPercent(explanation.class_probability)}) | Attribution target: ${target}`;
     renderSummaryList(topPositiveWords, explanation.summary.top_positive, "No strongly positive contributing words.");
     renderSummaryList(topNegativeWords, explanation.summary.top_negative, "No strongly negative contributing words.");
 }
@@ -199,7 +200,7 @@ function renderCurrentTokenView() {
         tokenViewMode.value
     );
     if (tokenViewMode.value === "attribution") {
-        tokenModeNote.textContent = "Attribution mode is active. Word colors reflect contribution strength to the predicted class.";
+        tokenModeNote.textContent = "Attribution mode is active. Green supports positive sentiment; red supports negative sentiment.";
     } else {
         tokenModeNote.textContent = "Probability mode is active. Word colors reflect standalone token sentiment probabilities.";
     }

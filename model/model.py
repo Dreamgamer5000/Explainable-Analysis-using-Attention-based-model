@@ -1,6 +1,7 @@
 import re
 from collections import Counter
 
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 from transformers import pipeline
 
 try:
@@ -21,19 +22,8 @@ analyzer = pipeline(
 
 _ALLOWED_EXPLAIN_METHODS = {"auto", "lime", "shap"}
 
-_STOPWORDS = {
-    'the', 'and', 'for', 'was', 'this', 'that', 'with', 'are', 'its', 'but',
-    'not', 'you', 'all', 'can', 'had', 'her', 'she', 'him', 'his', 'how',
-    'man', 'new', 'now', 'old', 'see', 'two', 'way', 'who', 'boy', 'did',
-    'get', 'has', 'let', 'put', 'say', 'too', 'use', 'from', 'they', 'have',
-    'been', 'more', 'will', 'also', 'what', 'when', 'than', 'then', 'them',
-    'some', 'into', 'just', 'like', 'time', 'very', 'even', 'most', 'over',
-    'such', 'only', 'come', 'could', 'would', 'should', 'there', 'their',
-    'which', 'about', 'after', 'before', 'other', 'these', 'those', 'being',
-    'while', 'where', 'every', 'still', 'might', 'think', 'good', 'well',
-    'much', 'make', 'know', 'take', 'back', 'give', 'same', 'here', 'does',
-    'each', 'both', 'many', 'film', 'movie', 'watch',
-}
+_DOMAIN_STOPWORDS = {"film", "movie", "watch"}
+_STOPWORDS = set(ENGLISH_STOP_WORDS) | _DOMAIN_STOPWORDS
 
 _ASPECT_KEYWORDS = {
     'Acting': [
@@ -150,7 +140,8 @@ def _explain_with_lime(text):
 
     prediction = _prediction_dict(text)
     class_label = prediction["class_label"]
-    class_index = 1 if class_label == "POSITIVE" else 0
+    class_index = 1
+    attribution_target = "POSITIVE"
 
     explainer = LimeTextExplainer(class_names=["NEGATIVE", "POSITIVE"])
     explanation = explainer.explain_instance(
@@ -191,6 +182,7 @@ def _explain_with_lime(text):
         "method": "lime",
         "class_label": class_label,
         "class_probability": round(prediction["class_probability"], 4),
+        "attribution_target": attribution_target,
         "tokens": attributions,
         "summary": _build_summary(attributions),
     }
@@ -202,7 +194,8 @@ def _explain_with_shap(text):
 
     prediction = _prediction_dict(text)
     class_label = prediction["class_label"]
-    class_index = 1 if class_label == "POSITIVE" else 0
+    class_index = 1
+    attribution_target = "POSITIVE"
 
     masker = shap.maskers.Text(r"\W+")
     explainer = shap.Explainer(_predict_proba, masker)
@@ -251,6 +244,7 @@ def _explain_with_shap(text):
         "method": "shap",
         "class_label": class_label,
         "class_probability": round(prediction["class_probability"], 4),
+        "attribution_target": attribution_target,
         "tokens": attributions,
         "summary": _build_summary(attributions),
     }
@@ -415,17 +409,3 @@ def analyze_full_and_word_wise(text):
         token_pos = token_result["positive_probability"]
         token_neg = token_result["negative_probability"]
         print(f"{token:<15} | {token_pos * 100:>9.1f}% | {token_neg * 100:>9.1f}%")
-
-
-if __name__ == "__main__":
-    test_reviews = [
-        "An absolute triumph of cinema. The acting was brilliant, and the visuals were stunning.",
-        "A complete waste of time. The plot was poorly written, and the dialogue felt incredibly wooden.",
-        "The special effects were amazing, but the storyline was terribly boring and dragged on forever.",
-        "Absolutely loved it! Highly recommended.",
-        "Oh sure, because watching paint dry is exactly what I wanted to pay twenty dollars for. Absolute garbage.",
-        "The movie was okay, but the villain was completely terrifying and awesome.",
-    ]
-
-    for review in test_reviews:
-        analyze_full_and_word_wise(review)
