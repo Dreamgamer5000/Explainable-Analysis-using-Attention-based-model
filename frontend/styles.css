@@ -105,6 +105,40 @@ body {
     color: #7280a3;
 }
 
+.explain-controls {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+.control-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.control-label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.control-select {
+    background: #0f1422;
+    border: 1px solid #2f3952;
+    border-radius: 10px;
+    color: var(--text-main);
+    padding: 10px 12px;
+    font-size: 0.94rem;
+}
+
+.control-select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.22);
+}
+
 .analyze-button {
     margin-top: 16px;
     padding: 12px 20px;
@@ -233,6 +267,11 @@ body {
     font-size: 0.92rem;
 }
 
+.tokens-note-accent {
+    color: #91a9ff;
+    margin-top: -2px;
+}
+
 .token-output {
     line-height: 1.9;
     font-size: 19px;
@@ -252,6 +291,70 @@ body {
 .token-word.has-score:hover {
     transform: translateY(-1px);
     text-shadow: 0 0 14px rgba(255, 255, 255, 0.18);
+}
+
+.token-word.influence-positive {
+    text-shadow: 0 0 16px rgba(54, 217, 123, 0.16);
+}
+
+.token-word.influence-negative {
+    text-shadow: 0 0 16px rgba(255, 111, 141, 0.16);
+}
+
+.summary-block {
+    margin-top: 20px;
+    background: linear-gradient(180deg, #161d2f, #101523);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    padding: 18px;
+    box-shadow: var(--shadow-soft);
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.summary-column {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    padding: 12px;
+    background: rgba(15, 20, 34, 0.7);
+}
+
+.summary-positive {
+    border-color: rgba(54, 217, 123, 0.3);
+}
+
+.summary-negative {
+    border-color: rgba(255, 111, 141, 0.3);
+}
+
+.summary-title {
+    margin: 0 0 10px;
+    font-size: 0.96rem;
+}
+
+.summary-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.summary-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #d5dbef;
+}
+
+.summary-empty {
+    color: var(--text-muted);
 }
 
 .token-tooltip {
@@ -316,6 +419,75 @@ body {
     }
 }
 
+/* ── Chart blocks (trajectory + radar inside result section) ──────────────── */
+.chart-block {
+    margin-top: 20px;
+    background: linear-gradient(180deg, #161d2f, #101523);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    padding: 18px;
+    box-shadow: var(--shadow-soft);
+}
+
+.chart-title {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.chart-note {
+    margin: 8px 0 14px;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+}
+
+.chart-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.radar-wrap {
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+/* ── Scatter section ──────────────────────────────────────────────────────── */
+.scatter-section {
+    margin-top: 40px;
+}
+
+.section-title {
+    font-size: clamp(1.4rem, 4vw, 1.8rem);
+    font-weight: 700;
+    margin: 0 0 8px;
+    letter-spacing: 0.01em;
+}
+
+.section-subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin: 0 0 16px;
+    line-height: 1.55;
+}
+
+.section-subtitle code {
+    background: #1e2840;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 0.88em;
+    color: var(--accent);
+}
+
+.scatter-wrap {
+    margin-top: 20px;
+    height: 480px;
+    background: linear-gradient(180deg, #161d2f, #101523);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    padding: 18px;
+    box-shadow: var(--shadow-soft);
+}
+
 @media (max-width: 640px) {
     .score-value {
         font-size: 40px;
@@ -323,6 +495,14 @@ body {
 
     .token-output {
         font-size: 17px;
+    }
+
+    .scatter-wrap {
+        height: 340px;
+    }
+
+    .radar-wrap {
+        max-width: 100%;
     }
 }
 

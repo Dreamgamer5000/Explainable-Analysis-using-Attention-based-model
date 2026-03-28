@@ -1,3 +1,6 @@
 flask
 transformers
 torch
+lime
+shap
+scikit-learn
