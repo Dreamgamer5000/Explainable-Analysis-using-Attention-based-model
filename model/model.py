@@ -1,3 +1,7 @@
+import re
+from collections import Counter
+
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 from transformers import pipeline
 
 analyzer = pipeline(
@@ -6,6 +10,65 @@ analyzer = pipeline(
     top_k=None,
 )
 
+_DOMAIN_STOPWORDS = {"film", "movie", "watch"}
+_STOPWORDS = set(ENGLISH_STOP_WORDS) | _DOMAIN_STOPWORDS
+
+_ASPECT_KEYWORDS = {
+    "Acting": [
+        "acting", "actor", "actress", "performance", "performances",
+        "cast", "casting", "portrayal", "role", "plays", "played",
+    ],
+    "Directing": [
+        "director", "direction", "directed", "directing",
+        "filmmaker", "vision", "pacing", "pace", "helm", "helmed",
+        "directly", "directorial",
+    ],
+    "Plot": [
+        "plot", "story", "script", "writing", "narrative", "storyline",
+        "ending", "twist", "screenplay", "dialogue", "scene", "scenes",
+        "premise",
+    ],
+    "Cinematography": [
+        "cinematography", "visual", "visuals", "photography",
+        "lighting", "shot", "shots", "camera", "color", "colour",
+        "beautiful", "stunning",
+    ],
+    "Soundtrack": [
+        "soundtrack", "music", "score", "song", "songs", "audio",
+        "sound", "musical", "composer", "track", "tracks",
+    ],
+}
+
+
+def _contains_keyword(text, keywords):
+    lower = text.lower()
+    for kw in keywords:
+        if re.search(rf"\b{re.escape(kw)}\b", lower):
+            return True
+    return False
+
+
+def _split_clauses(sentence):
+    return [
+        part.strip()
+        for part in re.split(r"\b(?:but|however|although|though|yet)\b|[,;:]", sentence, flags=re.IGNORECASE)
+        if part.strip()
+    ]
+
+
+def _extract_aspect_snippets(sentence, keywords):
+    snippets = []
+    clauses = _split_clauses(sentence)
+
+    for clause in clauses:
+        if _contains_keyword(clause, keywords):
+            snippets.append(clause)
+
+    if not snippets and _contains_keyword(sentence, keywords):
+        snippets.append(sentence)
+
+    return snippets
+
 
 def format_scores(scores):
     pos_score = next(item["score"] for item in scores if item["label"] == "POSITIVE")
@@ -13,8 +76,90 @@ def format_scores(scores):
     return pos_score, neg_score
 
 
+def _split_sentences(text):
+    sentences = re.split(r"(?<=[.!?])\s+", text.strip())
+    return [s.strip() for s in sentences if s.strip()]
+
+
+def analyze_trajectory(text):
+    sentences = _split_sentences(text)
+    if not sentences:
+        return []
+
+    results = []
+    for i, sentence in enumerate(sentences):
+        output = analyzer(sentence, truncation=True, max_length=512)[0]
+        pos, neg = format_scores(output)
+        results.append(
+            {
+                "index": i,
+                "sentence": sentence,
+                "score": round(pos - neg, 4),
+                "positive": round(pos, 4),
+                "negative": round(neg, 4),
+            }
+        )
+    return results
+
+
+def analyze_aspects(text):
+    sentences = _split_sentences(text)
+    aspect_scores = {aspect: [] for aspect in _ASPECT_KEYWORDS}
+
+    for sentence in sentences:
+        for aspect, keywords in _ASPECT_KEYWORDS.items():
+            snippets = _extract_aspect_snippets(sentence, keywords)
+            for snippet in snippets:
+                output = analyzer(snippet, truncation=True, max_length=512)[0]
+                pos, neg = format_scores(output)
+                aspect_scores[aspect].append(pos - neg)
+
+    return {
+        aspect: round(sum(scores) / len(scores), 4) if scores else None
+        for aspect, scores in aspect_scores.items()
+    }
+
+
+def analyze_scatter(reviews):
+    positive_counts = Counter()
+    negative_counts = Counter()
+
+    for text in reviews:
+        text = text.strip()
+        if not text:
+            continue
+
+        output = analyzer(text, truncation=True, max_length=512)[0]
+        pos, neg = format_scores(output)
+
+        words = re.findall(r"\b[a-z]{3,}\b", text.lower())
+        words = [w for w in words if w not in _STOPWORDS]
+
+        if pos >= neg:
+            positive_counts.update(words)
+        else:
+            negative_counts.update(words)
+
+    all_words = set(positive_counts) | set(negative_counts)
+    data = []
+    for word in all_words:
+        pos_freq = positive_counts.get(word, 0)
+        neg_freq = negative_counts.get(word, 0)
+        if pos_freq + neg_freq >= 2:
+            data.append(
+                {
+                    "word": word,
+                    "positive_freq": pos_freq,
+                    "negative_freq": neg_freq,
+                }
+            )
+
+    data.sort(key=lambda x: x["positive_freq"] + x["negative_freq"], reverse=True)
+    return data[:200]
+
+
 def analyze_review(text):
-    overall_result = analyzer(text)[0]
+    overall_result = analyzer(text, truncation=True, max_length=512)[0]
     pos_prob, neg_prob = format_scores(overall_result)
 
     token_scores = []
@@ -40,6 +185,8 @@ def analyze_review(text):
             "negative_probability": neg_prob,
         },
         "tokens": token_scores,
+        "trajectory": analyze_trajectory(text),
+        "aspects": analyze_aspects(text),
     }
 
 

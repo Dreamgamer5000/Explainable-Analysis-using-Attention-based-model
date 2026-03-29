@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Movie Review Sentiment</title>
     <link rel="stylesheet" href="/frontend/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
 
 <body>
@@ -18,6 +19,9 @@
             <label for="reviewInput" class="input-label">Enter movie review</label>
             <textarea id="reviewInput" class="review-input" placeholder="Enter movie review" rows="7"></textarea>
             <button id="analyzeButton" class="analyze-button">Analyze Review</button>
+            <div id="analyzeLoading" class="loading-track hidden" aria-hidden="true">
+                <div class="loading-bouncer"></div>
+            </div>
             <p id="statusMessage" class="status-message"></p>
         </section>
 
@@ -37,6 +41,24 @@
                 <h2 class="tokens-title">Token Sentiment</h2>
                 <p class="tokens-note">Hover a word to view positive and negative scores.</p>
                 <div id="tokenOutput" class="token-output"></div>
+            </div>
+
+            <div id="trajectoryBlock" class="chart-block hidden">
+                <h2 class="chart-title">Sentiment Trajectory</h2>
+                <p class="chart-note">Sentiment score per sentence — from &minus;1 (negative) to +1 (positive). Hover a
+                    point to read the sentence.</p>
+                <div class="chart-wrap">
+                    <canvas id="trajectoryChart"></canvas>
+                </div>
+            </div>
+
+            <div id="aspectsBlock" class="chart-block hidden">
+                <h2 class="chart-title">Aspect Sentiment</h2>
+                <p class="chart-note">Sentiment for each cinematic aspect mentioned in the review. Gray points indicate
+                    no mentions detected.</p>
+                <div class="chart-wrap radar-wrap">
+                    <canvas id="aspectsChart"></canvas>
+                </div>
             </div>
         </section>
     </main>
