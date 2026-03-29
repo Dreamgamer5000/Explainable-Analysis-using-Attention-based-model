@@ -4,3 +4,4 @@ torch
 lime
 shap
 scikit-learn
+matplotlib

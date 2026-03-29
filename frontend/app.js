@@ -45,6 +45,7 @@ function setStatus(message, type = "info") {
 
 function setScatterStatus(message, type = "info") {
     const el = document.getElementById("scatterStatus");
+    if (!el) return;
     el.textContent = message;
     el.classList.remove("is-error", "is-success");
     if (type === "error") el.classList.add("is-error");
@@ -76,6 +77,12 @@ function cleanTokenForMatch(text) {
     return text.replace(/^[.,!?"'()\[\]{}]+|[.,!?"'()\[\]{}]+$/g, "");
 }
 
+function normalizeTokenForMatch(text) {
+    return cleanTokenForMatch(String(text || ""))
+        .replace(/[’]/g, "'")
+        .toLowerCase();
+}
+
 // ── Token rendering ───────────────────────────────────────────────────────────
 function renderTokens(tokens, reviewText, explanation, mode) {
     tokenOutput.innerHTML = "";
@@ -91,8 +98,10 @@ function renderTokens(tokens, reviewText, explanation, mode) {
 
         const cleanedFragment = cleanTokenForMatch(fragment);
         const currentToken = tokens[tokenIndex];
+        const fragmentKey = normalizeTokenForMatch(cleanedFragment);
+        const tokenKey = normalizeTokenForMatch(currentToken ? currentToken.token : "");
 
-        if (cleanedFragment && currentToken && cleanedFragment === currentToken.token) {
+        if (fragmentKey && currentToken && fragmentKey === tokenKey) {
             const explanationToken = explanationTokens[tokenIndex];
             const hasAttribution = explanationToken && Number.isFinite(Number(explanationToken.normalized_attribution));
 
@@ -381,6 +390,7 @@ function renderAspectsChart(aspects) {
 
 // ── Chart: Polarized Word Scatter ─────────────────────────────────────────────
 function renderScatterChart(scatter) {
+    if (!scatterChartWrap) return;
     if (!scatter || scatter.length === 0) {
         setScatterStatus("No word data to display.", "error");
         return;
@@ -407,7 +417,9 @@ function renderScatterChart(scatter) {
         return Math.max(4, Math.min(14, 4 + (total / maxTotal) * 10));
     });
 
-    const ctx = document.getElementById("scatterChart").getContext("2d");
+    const scatterCanvas = document.getElementById("scatterChart");
+    if (!scatterCanvas) return;
+    const ctx = scatterCanvas.getContext("2d");
 
     scatterChartInstance = new Chart(ctx, {
         type: "scatter",
@@ -535,7 +547,9 @@ async function analyzeReview() {
 
 // ── Scatter batch analyze ─────────────────────────────────────────────────────
 async function analyzeScatter() {
-    const text = document.getElementById("scatterInput").value.trim();
+    const scatterInput = document.getElementById("scatterInput");
+    if (!scatterInput) return;
+    const text = scatterInput.value.trim();
 
     if (!text) {
         setScatterStatus("Please paste at least two reviews separated by ---.", "error");
@@ -550,6 +564,7 @@ async function analyzeScatter() {
     }
 
     const scatterButton = document.getElementById("scatterButton");
+    if (!scatterButton) return;
     scatterButton.disabled = true;
     setScatterStatus(`Analyzing ${reviews.length} reviews…`, "info");
 
@@ -578,13 +593,17 @@ async function analyzeScatter() {
 
 // ── Event listeners ───────────────────────────────────────────────────────────
 analyzeButton.addEventListener("click", analyzeReview);
-document.getElementById("scatterButton").addEventListener("click", analyzeScatter);
+const scatterButtonElement = document.getElementById("scatterButton");
+if (scatterButtonElement) {
+    scatterButtonElement.addEventListener("click", analyzeScatter);
+}
 
 tokenOutput.addEventListener("mouseover", (event) => {
     const target = event.target.closest(".token-word.has-score");
     if (!target || target === activeTokenElement) return;
     activeTokenElement = target;
     showTooltip(target);
+    positionTooltip(event);
 });
 
 tokenOutput.addEventListener("mousemove", (event) => {

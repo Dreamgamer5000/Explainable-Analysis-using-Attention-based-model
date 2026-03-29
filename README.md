@@ -23,11 +23,10 @@ Both lists are intentionally kept simple and malleable in the code so you can ed
 
 ## Explainability Modes
 
-The single-review endpoint now supports `explain_method`:
+The single-review endpoint supports `explain_method`:
 
-1. `auto`: tries LIME first, falls back to SHAP.
-2. `lime`: force LIME local explanation.
-3. `shap`: force SHAP local explanation.
+1. `lime`: run LIME local explanation.
+2. `shap`: run SHAP local explanation.
 
 The API response remains backward-compatible and adds an `explanation` object.
 

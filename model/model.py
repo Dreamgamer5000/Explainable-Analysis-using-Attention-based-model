@@ -20,7 +20,7 @@ analyzer = pipeline(
     top_k=None,
 )
 
-_ALLOWED_EXPLAIN_METHODS = {"auto", "lime", "shap"}
+_ALLOWED_EXPLAIN_METHODS = {"lime", "shap"}
 
 _DOMAIN_STOPWORDS = {"film", "movie", "watch"}
 _STOPWORDS = set(ENGLISH_STOP_WORDS) | _DOMAIN_STOPWORDS
@@ -29,11 +29,11 @@ _ASPECT_KEYWORDS = {
     'Acting': [
         'acting', 'actor', 'actress', 'performance', 'performances',
         'cast', 'casting', 'portrayal', 'role', 'plays', 'played',
-        'character', 'characters',
     ],
     'Directing': [
         'director', 'direction', 'directed', 'directing',
         'filmmaker', 'vision', 'pacing', 'pace', 'helm', 'helmed',
+        'directly', 'directorial',
     ],
     'Plot': [
         'plot', 'story', 'script', 'writing', 'narrative', 'storyline',
@@ -50,6 +50,37 @@ _ASPECT_KEYWORDS = {
         'sound', 'musical', 'composer', 'track', 'tracks',
     ],
 }
+
+
+def _contains_keyword(text, keywords):
+    lower = text.lower()
+    for kw in keywords:
+        if re.search(rf"\b{re.escape(kw)}\b", lower):
+            return True
+    return False
+
+
+def _split_clauses(sentence):
+    return [
+        part.strip()
+        for part in re.split(r"\b(?:but|however|although|though|yet)\b|[,;:]", sentence, flags=re.IGNORECASE)
+        if part.strip()
+    ]
+
+
+def _extract_aspect_snippets(sentence, keywords):
+    snippets = []
+    clauses = _split_clauses(sentence)
+
+    # Prefer clause-level snippets so mixed statements are attributed correctly per aspect.
+    for clause in clauses:
+        if _contains_keyword(clause, keywords):
+            snippets.append(clause)
+
+    if not snippets and _contains_keyword(sentence, keywords):
+        snippets.append(sentence)
+
+    return snippets
 
 
 def format_scores(scores):
@@ -250,20 +281,85 @@ def _explain_with_shap(text):
     }
 
 
-def explain_review(text, method="auto"):
-    selected = (method or "auto").lower()
+def _explain_with_leave_one_out(text, requested_method, errors=None):
+    """Deterministic fallback explanation using token removal impact on positive probability."""
+    prediction = _prediction_dict(text)
+    aligned_tokens = _build_alignment_from_review(text)
+
+    baseline_pos = float(prediction["positive_probability"])
+    attributions = []
+    raw_values = []
+
+    for idx, token in enumerate(aligned_tokens):
+        perturbed_tokens = [t["raw"] for i, t in enumerate(aligned_tokens) if i != idx]
+        perturbed_text = " ".join(perturbed_tokens).strip()
+        if not perturbed_text:
+            perturbed_pos = baseline_pos
+        else:
+            perturbed_prediction = _prediction_dict(perturbed_text)
+            perturbed_pos = float(perturbed_prediction["positive_probability"])
+
+        impact = _clamp(baseline_pos - perturbed_pos, -1.0, 1.0)
+        raw_values.append(impact)
+        attributions.append(
+            {
+                "token": token["token"],
+                "start": token["start"],
+                "end": token["end"],
+                "attribution": impact,
+            }
+        )
+
+    normalized = _normalize_signed(raw_values)
+    for idx, value in enumerate(normalized):
+        attributions[idx]["normalized_attribution"] = round(value, 4)
+        attributions[idx]["attribution"] = round(attributions[idx]["attribution"], 4)
+        attributions[idx]["sign"] = (
+            "positive" if attributions[idx]["attribution"] > 0 else "negative" if attributions[idx]["attribution"] < 0 else "neutral"
+        )
+
+    error_text = "; ".join(errors or [])
+    return {
+        "method": f"{requested_method}_fallback",
+        "class_label": prediction["class_label"],
+        "class_probability": round(prediction["class_probability"], 4),
+        "attribution_target": "POSITIVE",
+        "tokens": attributions,
+        "summary": _build_summary(attributions),
+        "note": "Fallback explanation was used because the requested explainer failed.",
+        "fallback_reason": error_text,
+    }
+
+
+def explain_review(text, method="lime"):
+    selected = (method or "lime").lower()
     if selected not in _ALLOWED_EXPLAIN_METHODS:
         raise ValueError("Unsupported explain method")
 
     if selected == "lime":
-        return _explain_with_lime(text)
-    if selected == "shap":
-        return _explain_with_shap(text)
+        try:
+            return _explain_with_lime(text)
+        except Exception as lime_exc:
+            try:
+                return _explain_with_shap(text)
+            except Exception as shap_exc:
+                return _explain_with_leave_one_out(
+                    text,
+                    requested_method="lime",
+                    errors=[f"lime error: {lime_exc}", f"shap error: {shap_exc}"],
+                )
 
     try:
-        return _explain_with_lime(text)
-    except Exception:
         return _explain_with_shap(text)
+    except Exception as shap_exc:
+        try:
+            return _explain_with_lime(text)
+        except Exception as lime_exc:
+            return _explain_with_leave_one_out(
+                text,
+                requested_method="shap",
+                errors=[f"shap error: {shap_exc}", f"lime error: {lime_exc}"],
+            )
 
 
 def _split_sentences(text):
@@ -297,10 +393,10 @@ def analyze_aspects(text):
     aspect_scores = {aspect: [] for aspect in _ASPECT_KEYWORDS}
 
     for sentence in sentences:
-        lower = sentence.lower()
         for aspect, keywords in _ASPECT_KEYWORDS.items():
-            if any(kw in lower for kw in keywords):
-                output = analyzer(sentence, truncation=True, max_length=512)[0]
+            snippets = _extract_aspect_snippets(sentence, keywords)
+            for snippet in snippets:
+                output = analyzer(snippet, truncation=True, max_length=512)[0]
                 pos, neg = format_scores(output)
                 aspect_scores[aspect].append(pos - neg)
 
@@ -347,7 +443,7 @@ def analyze_scatter(reviews):
     return data[:200]
 
 
-def analyze_review(text, explain_method="auto"):
+def analyze_review(text, explain_method="lime"):
     overall_result = analyzer(text, truncation=True, max_length=512)[0]
     pos_prob, neg_prob = format_scores(overall_result)
 
@@ -376,15 +472,7 @@ def analyze_review(text, explain_method="auto"):
         "aspects": analyze_aspects(text),
     }
 
-    try:
-        result["explanation"] = explain_review(text, explain_method)
-    except Exception as exc:
-        result["explanation"] = {
-            "method": "unavailable",
-            "error": str(exc),
-            "tokens": [],
-            "summary": {"top_positive": [], "top_negative": []},
-        }
+    result["explanation"] = explain_review(text, explain_method)
 
     return result
 

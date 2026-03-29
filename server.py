@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request, send_from_directory
 
 from model.model import analyze_review, analyze_scatter
+from model.visuals import create_review_visuals, create_scatter_visual
 
 app = Flask(__name__, static_folder="frontend", static_url_path="/frontend")
 
@@ -19,7 +20,7 @@ def health_check():
 def analyze_movie_review():
     payload = request.get_json(silent=True) or {}
     review = payload.get("review")
-    explain_method = payload.get("explain_method", "auto")
+    explain_method = payload.get("explain_method", "lime")
 
     if not isinstance(review, str) or not review.strip():
         return (
@@ -27,13 +28,14 @@ def analyze_movie_review():
             400,
         )
 
-    if explain_method not in {"auto", "lime", "shap"}:
+    if explain_method not in {"lime", "shap"}:
         return (
-            jsonify({"error": "Invalid explain_method. Use one of: auto, lime, shap."}),
+            jsonify({"error": "Invalid explain_method. Use one of: lime, shap."}),
             400,
         )
 
     result = analyze_review(review.strip(), explain_method=explain_method)
+    result["saved_visuals"] = create_review_visuals(result)
     return jsonify(result), 200
 
 
@@ -49,7 +51,11 @@ def scatter_word_analysis():
         )
 
     data = analyze_scatter(reviews)
-    return jsonify({"scatter": data}), 200
+    response = {
+        "scatter": data,
+        "saved_visuals": create_scatter_visual(data),
+    }
+    return jsonify(response), 200
 
 
 if __name__ == "__main__":
