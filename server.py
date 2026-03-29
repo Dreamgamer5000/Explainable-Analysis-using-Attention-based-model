@@ -21,7 +21,6 @@ def health_check():
 def analyze_movie_review():
     payload = request.get_json(silent=True) or {}
     review = payload.get("review")
-    explain_method = payload.get("explain_method", "lime")
 
     if not isinstance(review, str) or not review.strip():
         return (
@@ -29,13 +28,7 @@ def analyze_movie_review():
             400,
         )
 
-    if explain_method not in {"lime", "shap"}:
-        return (
-            jsonify({"error": "Invalid explain_method. Use one of: lime, shap."}),
-            400,
-        )
-
-    result = analyze_review(review.strip(), explain_method=explain_method)
+    result = analyze_review(review.strip())
     result["saved_visuals"] = create_review_visuals(result)
     return jsonify(result), 200
 

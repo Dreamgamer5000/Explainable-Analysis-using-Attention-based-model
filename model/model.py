@@ -443,7 +443,7 @@ def analyze_scatter(reviews):
     return data[:200]
 
 
-def analyze_review(text, explain_method="lime"):
+def analyze_review(text, explain_method="lime", include_explanation=False):
     overall_result = analyzer(text, truncation=True, max_length=512)[0]
     pos_prob, neg_prob = format_scores(overall_result)
 
@@ -472,7 +472,8 @@ def analyze_review(text, explain_method="lime"):
         "aspects": analyze_aspects(text),
     }
 
-    result["explanation"] = explain_review(text, explain_method)
+    if include_explanation:
+        result["explanation"] = explain_review(text, explain_method)
 
     return result
 

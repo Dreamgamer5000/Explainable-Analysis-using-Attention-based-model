@@ -4,28 +4,19 @@ const analyzeButton = document.getElementById("analyzeButton");
 const analyzeLoading = document.getElementById("analyzeLoading");
 const statusMessage = document.getElementById("statusMessage");
 const resultSection = document.getElementById("resultSection");
-const tokenViewMode = document.getElementById("tokenViewMode");
 const positiveScore = document.getElementById("positiveScore");
 const negativeScore = document.getElementById("negativeScore");
 const tokenOutput = document.getElementById("tokenOutput");
-const tokenModeNote = document.getElementById("tokenModeNote");
-const explanationSummary = document.getElementById("explanationSummary");
-const summaryMethodLabel = document.getElementById("summaryMethodLabel");
-const topPositiveWords = document.getElementById("topPositiveWords");
-const topNegativeWords = document.getElementById("topNegativeWords");
 const tokenTooltip = document.getElementById("tokenTooltip");
 const tooltipToken = document.getElementById("tooltipToken");
 const tooltipPositive = document.getElementById("tooltipPositive");
 const tooltipNegative = document.getElementById("tooltipNegative");
-const tooltipAttribution = document.getElementById("tooltipAttribution");
 
 const trajectoryBlock = document.getElementById("trajectoryBlock");
 const aspectsBlock = document.getElementById("aspectsBlock");
 const scatterChartWrap = document.getElementById("scatterChartWrap");
 
 let activeTokenElement = null;
-let latestAnalyzePayload = null;
-const DEFAULT_EXPLAIN_METHOD = "lime";
 
 // ── Chart.js defaults ─────────────────────────────────────────────────────────
 Chart.defaults.color = "#9ca7c3";
@@ -75,16 +66,6 @@ function tokenTextColor(positiveProbability, negativeProbability) {
     return `hsl(${hue}, 78%, 38%)`;
 }
 
-function attributionTextColor(normalizedAttribution) {
-    const value = Number(normalizedAttribution || 0);
-    const intensity = Math.min(1, Math.abs(value));
-    if (value === 0) return "hsl(220, 10%, 62%)";
-    const hue = value > 0 ? 142 : 352;
-    const saturation = 68 + intensity * 18;
-    const lightness = 56 - intensity * 20;
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-}
-
 function cleanTokenForMatch(text) {
     return text.replace(/^[.,!?"'()\[\]{}]+|[.,!?"'()\[\]{}]+$/g, "");
 }
@@ -96,11 +77,10 @@ function normalizeTokenForMatch(text) {
 }
 
 // ── Token rendering ───────────────────────────────────────────────────────────
-function renderTokens(tokens, reviewText, explanation, mode) {
+function renderTokens(tokens, reviewText) {
     tokenOutput.innerHTML = "";
     const fragments = reviewText.split(/(\s+)/);
     const fragmentNode = document.createDocumentFragment();
-    const explanationTokens = explanation && Array.isArray(explanation.tokens) ? explanation.tokens : [];
     let tokenIndex = 0;
 
     for (const fragment of fragments) {
@@ -114,29 +94,15 @@ function renderTokens(tokens, reviewText, explanation, mode) {
         const tokenKey = normalizeTokenForMatch(currentToken ? currentToken.token : "");
 
         if (fragmentKey && currentToken && fragmentKey === tokenKey) {
-            const explanationToken = explanationTokens[tokenIndex];
-            const hasAttribution = explanationToken && Number.isFinite(Number(explanationToken.normalized_attribution));
-
-            if (mode === "attribution" && hasAttribution) {
-                element.style.color = attributionTextColor(explanationToken.normalized_attribution);
-                const sign = Number(explanationToken.normalized_attribution) > 0 ? "influence-positive" : "influence-negative";
-                if (Number(explanationToken.normalized_attribution) !== 0) {
-                    element.classList.add(sign);
-                }
-            } else {
-                element.style.color = tokenTextColor(
-                    currentToken.positive_probability,
-                    currentToken.negative_probability
-                );
-            }
+            element.style.color = tokenTextColor(
+                currentToken.positive_probability,
+                currentToken.negative_probability
+            );
 
             element.classList.add("has-score");
             element.dataset.token = currentToken.token;
             element.dataset.positive = String(currentToken.positive_probability);
             element.dataset.negative = String(currentToken.negative_probability);
-            element.dataset.attribution = String(explanationToken ? explanationToken.attribution : 0);
-            element.dataset.normalizedAttribution = String(explanationToken ? explanationToken.normalized_attribution : 0);
-            element.dataset.explainMethod = explanation && explanation.method ? explanation.method : "unavailable";
             tokenIndex += 1;
         }
 
@@ -159,73 +125,13 @@ function showTooltip(target) {
     const token = target.dataset.token;
     const positive = Number(target.dataset.positive || 0);
     const negative = Number(target.dataset.negative || 0);
-    const attribution = Number(target.dataset.attribution || 0);
-    const explainMethod = target.dataset.explainMethod || "unavailable";
 
     tooltipToken.textContent = token;
     tooltipPositive.textContent = `Positive: ${asPercent(positive)}`;
     tooltipNegative.textContent = `Negative: ${asPercent(negative)}`;
-    if (explainMethod !== "unavailable") {
-        const sign = attribution > 0 ? "supports positive" : attribution < 0 ? "supports negative" : "neutral";
-        tooltipAttribution.textContent = `Attribution (${explainMethod.toUpperCase()}): ${attribution.toFixed(4)} (${sign})`;
-        tooltipAttribution.classList.remove("hidden");
-    } else {
-        tooltipAttribution.classList.add("hidden");
-    }
     tokenTooltip.classList.remove("hidden");
     tokenTooltip.classList.add("show");
     tokenTooltip.setAttribute("aria-hidden", "false");
-}
-
-function renderSummaryList(container, words, emptyText) {
-    container.innerHTML = "";
-    if (!words || words.length === 0) {
-        const li = document.createElement("li");
-        li.className = "summary-empty";
-        li.textContent = emptyText;
-        container.appendChild(li);
-        return;
-    }
-
-    for (const word of words) {
-        const li = document.createElement("li");
-        const token = document.createElement("span");
-        token.textContent = word.token;
-        const score = document.createElement("span");
-        score.textContent = Number(word.score).toFixed(4);
-        li.appendChild(token);
-        li.appendChild(score);
-        container.appendChild(li);
-    }
-}
-
-function renderExplanationSummary(explanation) {
-    if (!explanation || explanation.method === "unavailable") {
-        explanationSummary.classList.add("hidden");
-        return;
-    }
-
-    explanationSummary.classList.remove("hidden");
-    const target = explanation.attribution_target || "POSITIVE";
-    summaryMethodLabel.textContent = `Method: ${explanation.method.toUpperCase()} | Predicted class: ${explanation.class_label} (${asPercent(explanation.class_probability)}) | Attribution target: ${target}`;
-    renderSummaryList(topPositiveWords, explanation.summary.top_positive, "No strongly positive contributing words.");
-    renderSummaryList(topNegativeWords, explanation.summary.top_negative, "No strongly negative contributing words.");
-}
-
-function renderCurrentTokenView() {
-    if (!latestAnalyzePayload) return;
-    const viewMode = tokenViewMode ? tokenViewMode.value : "probability";
-    renderTokens(
-        latestAnalyzePayload.tokens,
-        latestAnalyzePayload.review,
-        latestAnalyzePayload.explanation,
-        viewMode
-    );
-    if (viewMode === "attribution") {
-        tokenModeNote.textContent = "Attribution mode is active. Green supports positive sentiment; red supports negative sentiment.";
-    } else {
-        tokenModeNote.textContent = "Probability mode is active. Word colors reflect standalone token sentiment probabilities.";
-    }
 }
 
 function hideTooltip() {
@@ -519,10 +425,7 @@ async function analyzeReview() {
         const response = await fetch("/api/analyze", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                review,
-                explain_method: DEFAULT_EXPLAIN_METHOD,
-            }),
+            body: JSON.stringify({ review }),
         });
 
         const data = await response.json();
@@ -533,13 +436,7 @@ async function analyzeReview() {
         negativeScore.textContent = asPercent(data.overall.negative_probability);
         animateScoreValue(positiveScore);
         animateScoreValue(negativeScore);
-        latestAnalyzePayload = {
-            review,
-            tokens: data.tokens,
-            explanation: data.explanation,
-        };
-        renderCurrentTokenView();
-        renderExplanationSummary(data.explanation);
+        renderTokens(data.tokens, review);
         renderTrajectoryChart(data.trajectory);
         renderAspectsChart(data.aspects);
 
@@ -550,8 +447,6 @@ async function analyzeReview() {
     } catch (error) {
         resultSection.classList.add("hidden");
         resultSection.classList.remove("is-visible");
-        latestAnalyzePayload = null;
-        explanationSummary.classList.add("hidden");
         hideTooltip();
         setStatus(error.message, "error");
     } finally {
@@ -636,9 +531,3 @@ tokenOutput.addEventListener("mouseout", (event) => {
 reviewInput.addEventListener("keydown", (event) => {
     if ((event.metaKey || event.ctrlKey) && event.key === "Enter") analyzeReview();
 });
-
-if (tokenViewMode) {
-    tokenViewMode.addEventListener("change", () => {
-        renderCurrentTokenView();
-    });
-}
