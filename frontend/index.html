@@ -19,6 +19,7 @@
             <label for="reviewInput" class="input-label">Enter movie review</label>
             <textarea id="reviewInput" class="review-input" placeholder="Enter movie review" rows="7"></textarea>
             <div class="explain-controls">
+                <!--
                 <div class="control-item">
                     <label for="explainMethod" class="control-label">Explain method</label>
                     <select id="explainMethod" class="control-select">
@@ -26,15 +27,22 @@
                         <option value="shap">SHAP</option>
                     </select>
                 </div>
+                -->
                 <div class="control-item">
+                    <label class="control-label">Explain method: LIME</label>
+                </div>
+                <!-- <div class="control-item">
                     <label for="tokenViewMode" class="control-label">Token color mode</label>
                     <select id="tokenViewMode" class="control-select">
                         <option value="probability" selected>Probability</option>
                         <option value="attribution">Attribution</option>
                     </select>
-                </div>
+                </div> -->
             </div>
             <button id="analyzeButton" class="analyze-button">Analyze Review</button>
+            <div id="analyzeLoading" class="loading-track hidden" aria-hidden="true">
+                <div class="loading-bouncer"></div>
+            </div>
             <p id="statusMessage" class="status-message"></p>
         </section>
 

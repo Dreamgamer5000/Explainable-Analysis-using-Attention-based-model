@@ -1,9 +1,9 @@
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const reviewInput = document.getElementById("reviewInput");
 const analyzeButton = document.getElementById("analyzeButton");
+const analyzeLoading = document.getElementById("analyzeLoading");
 const statusMessage = document.getElementById("statusMessage");
 const resultSection = document.getElementById("resultSection");
-const explainMethod = document.getElementById("explainMethod");
 const tokenViewMode = document.getElementById("tokenViewMode");
 const positiveScore = document.getElementById("positiveScore");
 const negativeScore = document.getElementById("negativeScore");
@@ -25,6 +25,7 @@ const scatterChartWrap = document.getElementById("scatterChartWrap");
 
 let activeTokenElement = null;
 let latestAnalyzePayload = null;
+const DEFAULT_EXPLAIN_METHOD = "lime";
 
 // ── Chart.js defaults ─────────────────────────────────────────────────────────
 Chart.defaults.color = "#9ca7c3";
@@ -41,6 +42,17 @@ function setStatus(message, type = "info") {
     statusMessage.classList.remove("is-error", "is-success");
     if (type === "error") statusMessage.classList.add("is-error");
     if (type === "success") statusMessage.classList.add("is-success");
+}
+
+function setAnalyzeLoading(isLoading) {
+    if (!analyzeLoading) return;
+    if (isLoading) {
+        analyzeLoading.classList.remove("hidden");
+        analyzeLoading.setAttribute("aria-hidden", "false");
+    } else {
+        analyzeLoading.classList.add("hidden");
+        analyzeLoading.setAttribute("aria-hidden", "true");
+    }
 }
 
 function setScatterStatus(message, type = "info") {
@@ -202,13 +214,14 @@ function renderExplanationSummary(explanation) {
 
 function renderCurrentTokenView() {
     if (!latestAnalyzePayload) return;
+    const viewMode = tokenViewMode ? tokenViewMode.value : "probability";
     renderTokens(
         latestAnalyzePayload.tokens,
         latestAnalyzePayload.review,
         latestAnalyzePayload.explanation,
-        tokenViewMode.value
+        viewMode
     );
-    if (tokenViewMode.value === "attribution") {
+    if (viewMode === "attribution") {
         tokenModeNote.textContent = "Attribution mode is active. Green supports positive sentiment; red supports negative sentiment.";
     } else {
         tokenModeNote.textContent = "Probability mode is active. Word colors reflect standalone token sentiment probabilities.";
@@ -498,6 +511,7 @@ async function analyzeReview() {
     }
 
     analyzeButton.disabled = true;
+    setAnalyzeLoading(true);
     hideTooltip();
     setStatus("Analyzing review…", "info");
 
@@ -507,7 +521,7 @@ async function analyzeReview() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 review,
-                explain_method: explainMethod.value,
+                explain_method: DEFAULT_EXPLAIN_METHOD,
             }),
         });
 
@@ -541,6 +555,7 @@ async function analyzeReview() {
         hideTooltip();
         setStatus(error.message, "error");
     } finally {
+        setAnalyzeLoading(false);
         analyzeButton.disabled = false;
     }
 }
@@ -622,6 +637,8 @@ reviewInput.addEventListener("keydown", (event) => {
     if ((event.metaKey || event.ctrlKey) && event.key === "Enter") analyzeReview();
 });
 
-tokenViewMode.addEventListener("change", () => {
-    renderCurrentTokenView();
-});
+if (tokenViewMode) {
+    tokenViewMode.addEventListener("change", () => {
+        renderCurrentTokenView();
+    });
+}

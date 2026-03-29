@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request, send_from_directory
+import argparse
 
 from model.model import analyze_review, analyze_scatter
 from model.visuals import create_review_visuals, create_scatter_visual
@@ -59,4 +60,8 @@ def scatter_word_analysis():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    parser = argparse.ArgumentParser(description="Run sentiment analysis server")
+    parser.add_argument("--port", type=int, default=5000, help="Port to run the server on")
+    args = parser.parse_args()
+
+    app.run(host="0.0.0.0", port=args.port, debug=False)
