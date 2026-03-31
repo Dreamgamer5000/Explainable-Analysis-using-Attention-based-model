@@ -173,4 +173,11 @@ poetry.toml
 # LSP config files
 pyrightconfig.json
 
+# Visuals ignore
+/visuls/aspect_sentiment_bar.png
+/visuls/attention_rollout_heatmap.png
+/visuls/lime_shap_explanation.png
+/visuls/sentiment_trajectory.png
+/visuls/token_probability_table.png
+
 # End of https://www.toptal.com/developers/gitignore/api/python
