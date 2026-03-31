@@ -19,7 +19,7 @@ const scatterChartWrap = document.getElementById("scatterChartWrap");
 let activeTokenElement = null;
 
 // ── Chart.js defaults ─────────────────────────────────────────────────────────
-Chart.defaults.color = "#9ca7c3";
+Chart.defaults.color = "#5f6f8a";
 Chart.defaults.font.family = "Inter, Segoe UI, Arial, sans-serif";
 
 // Chart instances (kept so we can destroy before re-creating)
@@ -224,16 +224,16 @@ function renderTrajectoryChart(trajectory) {
                 y: {
                     min: -1,
                     max: 1,
-                    grid: { color: "rgba(255,255,255,0.07)" },
+                    grid: { color: "rgba(31, 48, 79, 0.12)" },
                     ticks: {
-                        color: "#9ca7c3",
+                        color: "#5f6f8a",
                         callback: (v) => v.toFixed(1),
                         stepSize: 0.5,
                     },
                 },
                 x: {
-                    grid: { color: "rgba(255,255,255,0.07)" },
-                    ticks: { color: "#9ca7c3" },
+                    grid: { color: "rgba(31, 48, 79, 0.12)" },
+                    ticks: { color: "#5f6f8a" },
                 },
             },
         },
@@ -298,12 +298,12 @@ function renderAspectsChart(aspects) {
                 r: {
                     min: -1,
                     max: 1,
-                    grid: { color: "rgba(255,255,255,0.1)" },
-                    angleLines: { color: "rgba(255,255,255,0.1)" },
-                    pointLabels: { color: "#e6e9f2", font: { size: 13, weight: "600" } },
+                    grid: { color: "rgba(31, 48, 79, 0.14)" },
+                    angleLines: { color: "rgba(31, 48, 79, 0.14)" },
+                    pointLabels: { color: "#1f2e4c", font: { size: 13, weight: "600" } },
                     ticks: {
                         backdropColor: "transparent",
-                        color: "#9ca7c3",
+                        color: "#5f6f8a",
                         stepSize: 0.5,
                         callback: (v) => v.toFixed(1),
                     },
@@ -388,8 +388,8 @@ function renderScatterChart(scatter) {
                         color: "#ff6f8d",
                         font: { size: 12, weight: "600" },
                     },
-                    grid: { color: "rgba(255,255,255,0.07)" },
-                    ticks: { color: "#9ca7c3" },
+                    grid: { color: "rgba(31, 48, 79, 0.12)" },
+                    ticks: { color: "#5f6f8a" },
                     min: 0,
                 },
                 y: {
@@ -399,8 +399,8 @@ function renderScatterChart(scatter) {
                         color: "#36d97b",
                         font: { size: 12, weight: "600" },
                     },
-                    grid: { color: "rgba(255,255,255,0.07)" },
-                    ticks: { color: "#9ca7c3" },
+                    grid: { color: "rgba(31, 48, 79, 0.12)" },
+                    ticks: { color: "#5f6f8a" },
                     min: 0,
                 },
             },
